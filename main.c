@@ -20,8 +20,21 @@
     long int majflt = 0;
     long int minflt = 0;
 
-void execute (char * strings) {
+void execute (char * commands[MAX_ARGS]) {
+          pid_t pid;
+            pid = fork();
+            if (pid < 0) {                     /* error occurred */
+                fprintf(stderr, "execUS: Fork Failed");
+                exit (1);
+                }
 
+                else if (pid > 0) {
+                    wait(NULL);
+                }
+
+                else {
+                    execvp (commands[0],commands);
+                }
 }
 
 void print (struct rusage *usage) {
@@ -67,12 +80,12 @@ void getstats (void) {
 }
 
 int main(void) {
+    int c;
     int length;
     char inputbuffer[MAX_LINE];// the string the user inputs
     extern int errno;
     //memcpy (inputbuffer, args, strlen(args)+1);
-
-    while (1) {
+    while (1){
 
         printf("Enter a command:\n");
 
@@ -85,78 +98,65 @@ int main(void) {
         {
             exit(-1); // somthing went wrong
         }*/
-        else {char * cmd = (char *) malloc(MAX_LINE);
-        cmd = inputbuffer;
-        char * strings[MAX_ARGS];// srting after divding each word ot token
-
-        int j;
-        for (j = 0; j < MAX_ARGS; j++) {
-            strings[j] = (char *) malloc (80);
-        }
-
-        int i = 0;
-        strings[i] = (strtok (cmd," \t\n"));
-        while (strings[i] != NULL)
-        {
-            i++;
-            strings[i] = strtok (NULL," \t\n");
-        }
-
-        if (strcmp(strings[0],"cd") == 0) {
-            //If the command is cd, call chdir(): see man page for calling parameters
-            //http://linux.die.net/man/3/chdir
-            /*char * workdirectory[50];
-            getwd(workdirectory);
-            strcat(workdirectory,strings[1]);*/
-            if (strcmp(strings[1],"..") == 0) {
-                chdir(strings[1]);
-            }
-
-            else {
-                char buff[MAX_LINE];
-                getwd(buff);
-                strcat(buff,"/");
-                strcat(buff,strings[1]);
-                chdir(buff);
-            }
-
-            //if (errno != 0) {
-                //fprintf(stderr, "Change directory failed.\n");
-            //}
-        }
-
-        else if (strcmp(strings[0],"exit") == 0) {
-                printf("Exiting tsh\n");
-                exit(-1);
-            }
-
         else {
-            pid_t pid;
-            pid = fork();
-            if (pid < 0) {                     /* error occurred */
-                fprintf(stderr, "execUS: Fork Failed");
-                exit (1);
-                }
+            char * cmd = (char *) malloc(MAX_LINE);
+            cmd = inputbuffer;
+            char * strings[MAX_ARGS];// srting after divding each word ot token
 
-                else if (pid > 0) {
-                    wait(NULL);
+            int j;
+            for (j = 0; j < MAX_ARGS; j++) {
+                strings[j] = (char *) malloc (80);
+            }
+
+            int i = 0;
+            strings[i] = (strtok (cmd," \t\n"));
+            while (strings[i] != NULL)
+            {
+                i++;
+                strings[i] = strtok (NULL," \t\n");
+            }
+
+            if (strcmp(strings[0],"cd") == 0) {
+                //If the command is cd, call chdir(): see man page for calling parameters
+                //http://linux.die.net/man/3/chdir
+                /*char * workdirectory[50];
+                getwd(workdirectory);
+                strcat(workdirectory,strings[1]);*/
+                if (strcmp(strings[1],"..") == 0) {
+                    chdir(strings[1]);
                 }
 
                 else {
-                    execvp (strings[0],strings);
+                    char buff[MAX_LINE];
+                    getwd(buff);
+                    strcat(buff,"/");
+                    strcat(buff,strings[1]);
+                    chdir(buff);
                 }
 
-            getstats();            
+                //if (errno != 0) {
+                    //fprintf(stderr, "Change directory failed.\n");
+                //}
             }
 
-        /*int k;
-        for (k = 0; k < MAX_ARGS; k++) {
-            free(strings[k]);
-        }*/
-        //free(cmd);
+            else if (strcmp(strings[0],"exit") == 0) {
+                    printf("Exiting tsh\n");
+                    exit(-1);
+                }
+
+            else {
+
+                execute(strings);
+                getstats();
+                }
+
+            /*int k;
+            for (k = 0; k < MAX_ARGS; k++) {
+                free(strings[k]);
+            }*/
+            //free(cmd);
+        }
     }
-    }
-    
     exit(-1);
 }
 
