@@ -22,6 +22,27 @@ long int nvcsw = 0;
 long int majflt = 0;
 long int minflt = 0;
 
+/*
+char * parser (char * input) {
+    char * cmd = (char *) malloc(MAX_LINE);
+    cmd = input;
+    char * strings[MAX_ARGS];// srting after divding each word ot token
+
+    int j;
+    for (j = 0; j < MAX_ARGS; j++) {
+        strings[j] = (char *) malloc (80);
+    }
+
+    int i = 0;
+    strings[i] = (strtok (cmd," \t\n"));
+    while (strings[i] != NULL)
+    {
+        i++;
+        strings[i] = strtok (NULL," \t\n");
+    }
+    return *strings;
+}
+ */
 
 void execute (char * commands[MAX_ARGS]) {
           pid_t pid;
@@ -84,12 +105,36 @@ void getstats (void) {
     print (&usage);
 }
 
-int main(void) {
+int main (char initialcommand[MAX_LINE]) {
+    extern int errno;
+
     int c;
     int length;
+
     char inputbuffer[MAX_LINE];// the string the user inputs
-    extern int errno;
+    char * cmd = (char *) malloc(MAX_LINE);
+    char * strings[MAX_ARGS];
+
     //memcpy (inputbuffer, args, strlen(args)+1);
+    read (initialcommand, inputbuffer,MAX_LINE);
+    cmd = inputbuffer;
+
+    int j;
+    for (j = 0; j < MAX_ARGS; j++) {
+        strings[j] = (char *) malloc (80);
+    }
+
+    int i = 0;
+    strings[i] = (strtok (cmd," \t\n"));
+    while (strings[i] != NULL)
+    {
+        i++;
+        strings[i] = strtok (NULL," \t\n");
+    }
+
+    execute(strings);
+    getstats();
+    
     while (1){
 
         printf("Enter a command:\n");
@@ -104,9 +149,9 @@ int main(void) {
             exit(-1); // somthing went wrong
         }*/
         else {
-            char * cmd = (char *) malloc(MAX_LINE);
+
             cmd = inputbuffer;
-            char * strings[MAX_ARGS];// srting after divding each word ot token
+// srting after divding each word ot token
 
             int j;
             for (j = 0; j < MAX_ARGS; j++) {
@@ -164,4 +209,7 @@ int main(void) {
     }
     exit(-1);
 }
-
+/*
+void main (void){
+    tsh("cat /etc/motd");
+}*/
