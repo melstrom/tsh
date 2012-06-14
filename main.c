@@ -14,6 +14,15 @@
 #include <errno.h>
 
 #define MAX_LINE 80
+#define MAX_ARGS 32
+    long int nivcsw = 0;
+    long int nvcsw = 0;
+    long int majflt = 0;
+    long int minflt = 0;
+
+void execute (char * strings) {
+
+}
 
 void print (struct rusage *usage) {
     /*
@@ -33,15 +42,20 @@ void print (struct rusage *usage) {
     */
 
     //code idea source: http://www.unix.com/hp-ux/38937-getrusage.html
+   nivcsw = (usage->ru_nivcsw) - nivcsw;
+    nvcsw = (usage->ru_nvcsw) - nvcsw;
+   majflt = (usage->ru_majflt) - majflt;
+     minflt = (usage->ru_minflt) - minflt;
 
-    printf("\t Number of times the process was preempted involuntarily: %lu .\n",
-            usage->ru_nivcsw);    //c
-    printf("\t Number of times the process gave up the CPU voluntarily: %lu .\n",
-        usage->ru_nvcsw);     //d
-    printf("\t Number of page faults: %lu .\n",
-        usage->ru_majflt);    //e
-    printf("\t Number of page faults that could be satisfied from the kernel’s internal cache: %lu .\n",
-        usage->ru_minflt);    //f
+    printf("\tNumber of times the process was preempted involuntarily: %lu .\n",
+            nivcsw);    //c
+    printf("\tNumber of times the process gave up the CPU voluntarily: %lu .\n",
+            nvcsw);     //d
+    printf("\tNumber of page faults: %lu .\n",
+            majflt);    //e
+    printf("\tNumber of page faults that could be satisfied \n"
+            "\tfrom the kernel’s internal cache: %lu .\n",
+            minflt);    //f
 }
 
 void getstats (void) {
@@ -53,33 +67,35 @@ void getstats (void) {
 }
 
 int main(void) {
-
-    //extern int errno;
+    int length;
+    char inputbuffer[MAX_LINE];// the string the user inputs
+    extern int errno;
     //memcpy (inputbuffer, args, strlen(args)+1);
 
     while (1) {
-        
-        int length;
-        int i = 0;
-        char inputbuffer[MAX_LINE];// the string the user inputs
 
-        char *strings[32];// srting after divding each word ot token
-        char *cmd;
-        fprintf(stdout, "Enter a command:\n");
+        printf("Enter a command:\n");
+
         length = read (STDIN_FILENO, inputbuffer,MAX_LINE);
-
-        if (length == 0) {// no text was entered
-            exit(0);
+        if (length == 1) {// no text was entered
+            //exit(0);
         }
 
-        if (length<0)
+        /*if (length<0)
         {
             exit(-1); // somthing went wrong
+        }*/
+        else {char * cmd = (char *) malloc(MAX_LINE);
+        cmd = inputbuffer;
+        char * strings[MAX_ARGS];// srting after divding each word ot token
+
+        int j;
+        for (j = 0; j < MAX_ARGS; j++) {
+            strings[j] = (char *) malloc (80);
         }
 
-        cmd = inputbuffer;
+        int i = 0;
         strings[i] = (strtok (cmd," \t\n"));
-
         while (strings[i] != NULL)
         {
             i++;
@@ -89,7 +105,20 @@ int main(void) {
         if (strcmp(strings[0],"cd") == 0) {
             //If the command is cd, call chdir(): see man page for calling parameters
             //http://linux.die.net/man/3/chdir
-            chdir(strings[1]);
+            /*char * workdirectory[50];
+            getwd(workdirectory);
+            strcat(workdirectory,strings[1]);*/
+            if (strcmp(strings[1],"..") == 0) {
+                chdir(strings[1]);
+            }
+
+            else {
+                char buff[MAX_LINE];
+                getwd(buff);
+                strcat(buff,"/");
+                strcat(buff,strings[1]);
+                chdir(buff);
+            }
 
             //if (errno != 0) {
                 //fprintf(stderr, "Change directory failed.\n");
@@ -97,17 +126,16 @@ int main(void) {
         }
 
         else if (strcmp(strings[0],"exit") == 0) {
-                //If exit, then exit
-                return (EXIT_SUCCESS);
+                printf("Exiting tsh\n");
+                exit(-1);
             }
 
         else {
-                pid_t pid;
-                int i;
-                pid = fork();
-                if (pid < 0) {                     /* error occurred */
-                    fprintf(stderr, "execUS: Fork Failed");
-                    exit (1);
+            pid_t pid;
+            pid = fork();
+            if (pid < 0) {                     /* error occurred */
+                fprintf(stderr, "execUS: Fork Failed");
+                exit (1);
                 }
 
                 else if (pid > 0) {
@@ -117,7 +145,18 @@ int main(void) {
                 else {
                     execvp (strings[0],strings);
                 }
-                getstats();
+
+            getstats();            
             }
-	}
+
+        /*int k;
+        for (k = 0; k < MAX_ARGS; k++) {
+            free(strings[k]);
+        }*/
+        //free(cmd);
+    }
+    }
+    
+    exit(-1);
 }
+
