@@ -15,10 +15,13 @@
 
 #define MAX_LINE 80
 #define MAX_ARGS 32
-    long int nivcsw = 0;
-    long int nvcsw = 0;
-    long int majflt = 0;
-    long int minflt = 0;
+
+
+long int nivcsw = 0;
+long int nvcsw = 0;
+long int majflt = 0;
+long int minflt = 0;
+
 
 void execute (char * commands[MAX_ARGS]) {
           pid_t pid;
@@ -55,10 +58,12 @@ void print (struct rusage *usage) {
     */
 
     //code idea source: http://www.unix.com/hp-ux/38937-getrusage.html
-   nivcsw = (usage->ru_nivcsw) - nivcsw;
+    
+    nivcsw = (usage->ru_nivcsw) - nivcsw;
     nvcsw = (usage->ru_nvcsw) - nvcsw;
-   majflt = (usage->ru_majflt) - majflt;
-     minflt = (usage->ru_minflt) - minflt;
+    majflt = (usage->ru_majflt) - majflt;
+    minflt = (usage->ru_minflt) - minflt;
+    
 
     printf("\tNumber of times the process was preempted involuntarily: %lu .\n",
             nivcsw);    //c
